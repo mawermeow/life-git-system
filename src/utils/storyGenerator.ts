@@ -21,15 +21,15 @@ export class StoryGenerator {
           messages: [
             {
               role: 'system',
-              content: '你是一個富有哲學思維和幽默感的敘事者，擅長用輕鬆的方式講述深刻的人生故事。',
+              content: '你是一個富有哲學思維和幽默感的敘事者，擅長用輕鬆的方式講述深刻的人生故事。你的故事應該包含：1. 選擇的即時影響 2. 可能的未來發展 3. 一個有趣的比喻或啟示。',
             },
             {
               role: 'user',
               content: prompt,
             },
           ],
-          temperature: 0.7,
-          max_tokens: 150,
+          temperature: 0.8,
+          max_tokens: 300,
         }),
       });
 

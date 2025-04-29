@@ -1,7 +1,35 @@
 import { useState, useCallback } from 'react';
-import { GameState, CommandResult } from '../types/game';
+import { GameState } from '../types/game';
 import { CommandParser } from '../utils/commandParser';
 import { StoryGenerator } from '../utils/storyGenerator';
+
+interface Achievement {
+  id: string;
+  title: string;
+  description: string;
+  unlocked: boolean;
+}
+
+const initialAchievements: Achievement[] = [
+  {
+    id: 'first_commit',
+    title: '第一次選擇',
+    description: '完成第一次人生選擇',
+    unlocked: false,
+  },
+  {
+    id: 'branch_master',
+    title: '分支大師',
+    description: '創建 3 個不同的分支',
+    unlocked: false,
+  },
+  {
+    id: 'time_traveler',
+    title: '時空旅人',
+    description: '使用 reset 回到過去',
+    unlocked: false,
+  },
+];
 
 const initialState: GameState = {
   branches: [
@@ -47,13 +75,46 @@ export const useGameState = () => {
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [currentCommand, setCurrentCommand] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [achievements, setAchievements] = useState<Achievement[]>(initialAchievements);
+
+  const checkAchievements = useCallback((newState: GameState) => {
+    const newAchievements = [...achievements];
+
+    // 檢查第一次提交
+    if (!newAchievements[0].unlocked && newState.branches[0].commits.length > 1) {
+      newAchievements[0].unlocked = true;
+      setState(prev => ({
+        ...prev,
+        logs: [...prev.logs, '🎉 成就解鎖：第一次選擇！'],
+      }));
+    }
+
+    // 檢查分支大師
+    if (!newAchievements[1].unlocked && newState.branches.length >= 3) {
+      newAchievements[1].unlocked = true;
+      setState(prev => ({
+        ...prev,
+        logs: [...prev.logs, '🎉 成就解鎖：分支大師！'],
+      }));
+    }
+
+    setAchievements(newAchievements);
+  }, [achievements]);
 
   const executeCommand = useCallback(async (input: string) => {
+    if (!input.trim()) return;
+
+    // 先顯示用戶輸入的指令
+    setState(prev => ({
+      ...prev,
+      logs: [...prev.logs, `$ ${input}`],
+    }));
+
     const parsed = CommandParser.parse(input);
     if (!parsed) {
       setState(prev => ({
         ...prev,
-        logs: [...prev.logs, '錯誤：無效的指令格式，請使用 git 指令'],
+        logs: [...prev.logs, '錯誤：無效的指令格式，請使用 git 指令', ''],
       }));
       return;
     }
@@ -64,23 +125,37 @@ export const useGameState = () => {
     setCommandHistory(prev => [...prev, input]);
     setCurrentCommand('');
 
+    // 顯示命令執行結果
+    setState(prev => ({
+      ...prev,
+      logs: [...prev.logs, result.message, ''],
+    }));
+
     if (result.newState) {
-      setState(result.newState);
-      
+      const newState = {
+        ...state,
+        ...result.newState,
+      };
+      setState(prev => ({
+        ...prev,
+        ...result.newState,
+      }));
+      checkAchievements(newState);
+
       // 如果是 commit 指令，生成故事
       if (command === 'commit') {
         setIsLoading(true);
         try {
-          const currentBranch = result.newState.branches.find(
-            b => b.name === result.newState.currentBranch
+          const currentBranch = newState.branches.find(
+            b => b.name === newState.currentBranch
           );
           if (currentBranch && currentBranch.commits.length > 0) {
             const latestCommit = currentBranch.commits[0];
             const story = await StoryGenerator.getStoryForCommit(latestCommit, {
-              branches: result.newState.branches,
-              currentBranch: result.newState.currentBranch,
+              branches: newState.branches,
+              currentBranch: newState.currentBranch,
             });
-            
+
             setState(prev => ({
               ...prev,
               logs: [...prev.logs, '', story, ''],
@@ -93,12 +168,7 @@ export const useGameState = () => {
         }
       }
     }
-
-    setState(prev => ({
-      ...prev,
-      logs: [...prev.logs, result.message],
-    }));
-  }, [state]);
+  }, [state, checkAchievements]);
 
   return {
     state,
@@ -107,5 +177,6 @@ export const useGameState = () => {
     setCurrentCommand,
     executeCommand,
     isLoading,
+    achievements,
   };
-}; 
+};
