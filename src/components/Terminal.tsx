@@ -94,9 +94,12 @@ export const Terminal: React.FC = () => {
       setCursorPosition(0);
       setSuggestions([]);
       setCommandHistoryIndex(-1);
-      if (inputRef.current) {
-        inputRef.current.focus();
-      }
+      // 使用 setTimeout 確保在狀態更新後重新聚焦
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
+      }, 0);
     } else if (e.key === 'Tab') {
       e.preventDefault();
       handleTabComplete();
@@ -143,6 +146,14 @@ export const Terminal: React.FC = () => {
       });
     }
   };
+
+  // 修改 useEffect 來處理自動聚焦
+  useEffect(() => {
+    // 當 isLoading 狀態改變時，確保輸入框保持焦點
+    if (!isLoading && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isLoading]);
 
   // 處理輸入變化
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
