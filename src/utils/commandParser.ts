@@ -316,4 +316,27 @@ export class CommandParser {
       newState: state,
     };
   }
+
+  static getCommandSuggestions(input: string): string[] {
+    const parts = input.trim().split(' ');
+    if (parts[0] !== 'git') return [];
+
+    const currentInput = parts[1] || '';
+    return validCommands.filter(cmd => 
+      cmd.startsWith(currentInput) && cmd !== currentInput
+    );
+  }
+
+  static getCommandArgsSuggestions(command: GitCommand, currentArgs: string[]): string[] {
+    switch (command) {
+      case 'commit':
+        return currentArgs.length === 0 ? ['-m'] : [];
+      case 'switch':
+        return currentArgs.length === 0 ? ['-c'] : [];
+      case 'reset':
+        return currentArgs.length === 0 ? ['--hard'] : [];
+      default:
+        return [];
+    }
+  }
 }

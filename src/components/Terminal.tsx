@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameState } from '../hooks/useGameState';
+import { CommandParser } from '../utils/commandParser';
 
 export const Terminal: React.FC = () => {
   const {
@@ -18,6 +19,8 @@ export const Terminal: React.FC = () => {
   const [showAchievements, setShowAchievements] = useState(false);
   const terminalRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
 
   // 游標閃爍效果
   useEffect(() => {
@@ -34,25 +37,79 @@ export const Terminal: React.FC = () => {
     }
   }, [state.logs]);
 
+  // 處理 Tab 鍵自動補全
+  const handleTabComplete = () => {
+    const parts = currentCommand.trim().split(' ');
+    if (parts[0] !== 'git') return;
+
+    if (parts.length === 2) {
+      // 補全指令
+      const commandSuggestions = CommandParser.getCommandSuggestions(currentCommand);
+      if (commandSuggestions.length > 0) {
+        const selectedSuggestion = commandSuggestions[selectedSuggestionIndex];
+        setCurrentCommand(`git ${selectedSuggestion}`);
+        setSelectedSuggestionIndex(0);
+        setSuggestions([]);
+      }
+    } else if (parts.length > 2) {
+      // 補全參數
+      const command = parts[1] as any;
+      const currentArgs = parts.slice(2);
+      const argSuggestions = CommandParser.getCommandArgsSuggestions(command, currentArgs);
+      
+      if (argSuggestions.length > 0) {
+        const selectedSuggestion = argSuggestions[selectedSuggestionIndex];
+        setCurrentCommand(`git ${command} ${selectedSuggestion}`);
+        setSelectedSuggestionIndex(0);
+        setSuggestions([]);
+      }
+    }
+  };
+
+  // 更新建議列表
+  useEffect(() => {
+    const parts = currentCommand.trim().split(' ');
+    if (parts[0] !== 'git') {
+      setSuggestions([]);
+      return;
+    }
+
+    if (parts.length === 2) {
+      setSuggestions(CommandParser.getCommandSuggestions(currentCommand));
+    } else if (parts.length > 2) {
+      const command = parts[1] as any;
+      const currentArgs = parts.slice(2);
+      setSuggestions(CommandParser.getCommandArgsSuggestions(command, currentArgs));
+    } else {
+      setSuggestions([]);
+    }
+  }, [currentCommand]);
+
   // 處理鍵盤事件
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       executeCommand(currentCommand);
       setCurrentCommand('');
       setCursorPosition(0);
+      setSuggestions([]);
       if (inputRef.current) {
         inputRef.current.focus();
       }
+    } else if (e.key === 'Tab') {
+      e.preventDefault();
+      handleTabComplete();
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       if (commandHistory.length > 0) {
         setCurrentCommand(commandHistory[commandHistory.length - 1]);
         setCursorPosition(commandHistory[commandHistory.length - 1].length);
+        setSuggestions([]);
       }
     } else if (e.key === 'ArrowDown') {
       e.preventDefault();
       setCurrentCommand('');
       setCursorPosition(0);
+      setSuggestions([]);
     } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
       // 左右移動時即時更新 cursorPosition
       requestAnimationFrame(() => {
@@ -195,18 +252,30 @@ export const Terminal: React.FC = () => {
               className="bg-transparent text-[#f0f0f0] outline-none w-full text-base tracking-wide border-none focus:border-none focus:ring-0"
               autoFocus
               disabled={isLoading}
-              // style={{ caretColor: 'transparent' }}
             />
-            {/*{showCursor && !isLoading && (*/}
-            {/*  <motion.span*/}
-            {/*    className="absolute top-[3px] h-5 w-2 bg-[#f0f0f0]"*/}
-            {/*    style={{*/}
-            {/*      left: `${cursorPosition * 0.63}rem`,*/}
-            {/*    }}*/}
-            {/*    animate={{ opacity: [1] }}*/}
-            {/*    transition={{ duration: 0.5, repeat: Infinity }}*/}
-            {/*  />*/}
-            {/*)}*/}
+            {suggestions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-[#2d2d2d] rounded shadow-lg">
+                {suggestions.map((suggestion, index) => (
+                  <div
+                    key={suggestion}
+                    className={`px-2 py-1 cursor-pointer ${
+                      index === selectedSuggestionIndex ? 'bg-[#3d3d3d]' : ''
+                    }`}
+                    onClick={() => {
+                      const parts = currentCommand.trim().split(' ');
+                      if (parts.length === 2) {
+                        setCurrentCommand(`git ${suggestion}`);
+                      } else if (parts.length > 2) {
+                        setCurrentCommand(`git ${parts[1]} ${suggestion}`);
+                      }
+                      setSuggestions([]);
+                    }}
+                  >
+                    {suggestion}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </motion.div>
       </div>
