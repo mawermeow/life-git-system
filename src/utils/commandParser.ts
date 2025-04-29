@@ -1,7 +1,6 @@
-
 import { GitCommand, CommandResult, GameState, Branch } from '../types/game';
 
-const validCommands = ['status', 'commit', 'branch', 'checkout', 'switchBranch', 'merge', 'rebase', 'reset', 'log', 'push'] as const;
+const validCommands = ['status', 'commit', 'branch', 'checkout', 'switch', 'switchBranch', 'merge', 'rebase', 'reset', 'log', 'push'] as const;
 
 function isValidCommand(command: string): command is typeof validCommands[number] {
   return (validCommands as readonly string[]).includes(command);
@@ -13,12 +12,12 @@ export class CommandParser {
     if (parts[0] !== 'git') return null;
 
     let commandStr = parts[1];
-    let args = parts.slice(2);
+    const args = parts.slice(2);
 
     // 特別處理 git switch -c 指令，轉換成 switchBranch
     if (commandStr === 'switch' && args[0] === '-c') {
       commandStr = 'switchBranch';
-      args = args.slice(1);
+      // 不再移除 -c 參數
     }
 
     if (!isValidCommand(commandStr)) {
@@ -42,6 +41,7 @@ export class CommandParser {
         return this.handleBranch(args, state);
       case 'checkout':
         return this.handleCheckout(args, state);
+      case 'switch':
       case 'switchBranch':
         return this.handleSwitch(args, state);
       case 'merge':
@@ -111,7 +111,16 @@ export class CommandParser {
   }
 
   private static handleBranch(args: string[], state: GameState): CommandResult {
+    console.log({args,state})
+    if (!state.branches || state.branches.length === 0) {
+      return {
+        success: false,
+        message: '目前沒有任何分支',
+      };
+    }
+
     if (args.length === 0) {
+      console.log("meow")
       return {
         success: true,
         message: state.branches.map(b =>

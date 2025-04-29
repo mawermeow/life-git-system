@@ -53,6 +53,13 @@ export const Terminal: React.FC = () => {
       e.preventDefault();
       setCurrentCommand('');
       setCursorPosition(0);
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      // 左右移動時即時更新 cursorPosition
+      requestAnimationFrame(() => {
+        if (inputRef.current) {
+          setCursorPosition(inputRef.current.selectionStart || 0);
+        }
+      });
     }
   };
 
@@ -64,7 +71,14 @@ export const Terminal: React.FC = () => {
   };
 
   return (
-    <div className="relative w-terminal h-terminal bg-[#1e1e1e] text-[#f0f0f0] font-mono rounded-lg overflow-hidden shadow-xl">
+    <div
+      className="relative w-terminal h-terminal bg-[#1e1e1e] text-[#f0f0f0] font-mono rounded-lg overflow-hidden shadow-xl"
+      onClick={(e) => {
+        // 如果點擊區塊內含有 'achievement-item' class，不進行 focus
+        if ((e.target as HTMLElement).closest('.achievement-item')) return;
+        inputRef.current?.focus();
+      }}
+    >
       <div className="absolute top-0 left-0 right-0 h-6 bg-[#2d2d2d] flex items-center px-4">
         <div className="flex space-x-2">
           <div className="w-3 h-3 rounded-full bg-[#ff5f56]"></div>
@@ -140,7 +154,7 @@ export const Terminal: React.FC = () => {
               {achievements.map(achievement => (
                 <div
                   key={achievement.id}
-                  className={`flex items-center p-2 rounded ${
+                  className={`achievement-item flex items-center p-2 rounded ${
                     achievement.unlocked ? 'bg-[#27c93f]/20' : 'bg-[#2d2d2d]'
                   }`}
                 >
@@ -174,20 +188,25 @@ export const Terminal: React.FC = () => {
               value={currentCommand}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
+              onSelect={(e) => {
+                const target = e.target as HTMLInputElement;
+                setCursorPosition(target.selectionStart || 0);
+              }}
               className="bg-transparent text-[#f0f0f0] outline-none w-full text-base tracking-wide border-none focus:border-none focus:ring-0"
               autoFocus
               disabled={isLoading}
+              // style={{ caretColor: 'transparent' }}
             />
-            {showCursor && !isLoading && (
-              <motion.span
-                className="absolute top-1 h-5 w-0.5 bg-[#f0f0f0]"
-                style={{
-                  left: `${cursorPosition * 0.6}rem`,
-                }}
-                animate={{ opacity: [1, 0] }}
-                transition={{ duration: 0.5, repeat: Infinity }}
-              />
-            )}
+            {/*{showCursor && !isLoading && (*/}
+            {/*  <motion.span*/}
+            {/*    className="absolute top-[3px] h-5 w-2 bg-[#f0f0f0]"*/}
+            {/*    style={{*/}
+            {/*      left: `${cursorPosition * 0.63}rem`,*/}
+            {/*    }}*/}
+            {/*    animate={{ opacity: [1] }}*/}
+            {/*    transition={{ duration: 0.5, repeat: Infinity }}*/}
+            {/*  />*/}
+            {/*)}*/}
           </div>
         </motion.div>
       </div>

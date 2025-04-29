@@ -36,6 +36,7 @@ export type GitCommand =
   | 'commit'
   | 'branch'
   | 'checkout'
+  | 'switch'
   | 'switchBranch'
   | 'merge'
   | 'rebase'

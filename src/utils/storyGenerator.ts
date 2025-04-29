@@ -13,10 +13,34 @@ export class StoryGenerator {
 
     const prompt = this.buildPrompt(context);
     try {
-      // 這裡可以整合 AI 生成更豐富的故事
-      return this.getFallbackStory(context);
+      const prompt = this.buildPrompt(context);
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: 'gpt-3.5-turbo',
+          messages: [
+            {
+              role: 'system',
+              content: '你是一個富有哲學思維和幽默感的敘事者，擅長用輕鬆的方式講述深刻的人生故事。你的故事應該包含：1. 選擇的即時影響 2. 可能的未來發展 3. 一個有趣的比喻或啟示。',
+            },
+            {
+              role: 'user',
+              content: prompt,
+            },
+          ],
+          temperature: 0.8,
+          max_tokens: 300,
+        }),
+      });
+
+      const data = await response.json();
+      return data.choices[0].message.content;
     } catch (error) {
-      console.error('生成故事失敗:', error);
+      console.error('故事生成失敗:', error);
       return this.getFallbackStory(context);
     }
   }
