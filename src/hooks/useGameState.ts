@@ -129,13 +129,13 @@ export const useGameState = () => {
 
     // 時空旅人：使用 reset 指令
     if (!newAchievements[2].unlocked) {
-      const usedReset = newState.logs.some(log => log.includes('reset'));
+      const usedReset = newState.logs.some(log => log.includes('⏳ 回到上一個人生選擇！'));
       if (usedReset) {
-        newAchievements[2].unlocked = true;
         setState(prev => ({
           ...prev,
           logs: [...prev.logs, '🎉 成就解鎖：時空旅人！'],
         }));
+        newAchievements[2].unlocked = true;
       }
     }
 
@@ -238,20 +238,45 @@ export const useGameState = () => {
     setCommandHistory(prev => [...prev, input]);
     setCurrentCommand('');
 
-    setState(prev => ({
-      ...prev,
-      logs: [...prev.logs, result.message, ''],
-    }));
+    // 依據指令類型調整訊息
+    let feedbackMessage = result.message;
+    if (result.success) {
+      switch (command) {
+        case 'branch':
+          feedbackMessage = `✨ 成功建立新分支：${args[0]}\n這是一個全新的開始，充滿無限可能！`;
+          break;
+        case 'checkout': {
+          const branch = state.branches.find(b => b.name === args[0]);
+          feedbackMessage = `🔀 已切換到分支：${args[0]}\n${branch?.description || '這是一個全新的開始！'}`;
+          break;
+        }
+        case 'commit': {
+          const commitMessage = args.join(' ').replace(/^-m\s*"?(.+?)"?$/, '$1') || '';
+          if (commitMessage) {
+            feedbackMessage = `✅ 人生新紀錄已提交：「${commitMessage}」`;
+          } else if (result.message) {
+            feedbackMessage = result.message;
+          }
+          break;
+        }
+        case 'merge':
+          feedbackMessage = `🔗 成功合併分支：${args[0]}\n這是一個重要的轉折點！`;
+          break;
+        case 'reset':
+          feedbackMessage = '⏳ 回到上一個人生選擇！';
+          break;
+        default:
+          feedbackMessage = result.message;
+      }
+    }
 
     if (result.newState) {
       const newState = {
         ...state,
         ...result.newState,
+        logs: [...state.logs, feedbackMessage, ''],
       };
-      setState(prev => ({
-        ...prev,
-        ...result.newState,
-      }));
+      setState(newState);
       checkAchievements(newState);
       checkFinalGoals(newState);
 
@@ -291,6 +316,11 @@ export const useGameState = () => {
           setIsLoading(false);
         }
       }
+    } else {
+      setState(prev => ({
+        ...prev,
+        logs: [...prev.logs, feedbackMessage, ''],
+      }));
     }
   }, [state, checkAchievements, checkFinalGoals, handleDeath]);
 

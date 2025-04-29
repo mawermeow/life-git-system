@@ -65,6 +65,8 @@ export class CommandParser {
       message,
       timestamp: Date.now(),
       parentIds: [state.head],
+      description: message,
+      options: [],
     };
 
     const newState = {
@@ -119,6 +121,9 @@ export class CommandParser {
       name: branchName,
       currentCommitId: currentBranch.currentCommitId,
       commits: [...currentBranch.commits],
+      description: `這是 ${branchName} 分支，充滿未知的挑戰和機遇`,
+      options: ['繼續探索', '回到主線', '尋找新機會'],
+      achievements: [],
     };
 
     return {
