@@ -1,14 +1,31 @@
+
 import { GitCommand, CommandResult, GameState, Branch } from '../types/game';
+
+const validCommands = ['status', 'commit', 'branch', 'checkout', 'switchBranch', 'merge', 'rebase', 'reset', 'log', 'push'] as const;
+
+function isValidCommand(command: string): command is typeof validCommands[number] {
+  return (validCommands as readonly string[]).includes(command);
+}
 
 export class CommandParser {
   static parse(input: string): { command: GitCommand; args: string[] } | null {
     const parts = input.trim().split(' ');
     if (parts[0] !== 'git') return null;
 
-    const command = parts[1] as GitCommand;
-    const args = parts.slice(2);
+    let commandStr = parts[1];
+    let args = parts.slice(2);
 
-    return { command, args };
+    // 特別處理 git switch -c 指令，轉換成 switchBranch
+    if (commandStr === 'switch' && args[0] === '-c') {
+      commandStr = 'switchBranch';
+      args = args.slice(1);
+    }
+
+    if (!isValidCommand(commandStr)) {
+      return null;
+    }
+
+    return { command: commandStr as GitCommand, args };
   }
 
   static executeCommand(
@@ -25,6 +42,8 @@ export class CommandParser {
         return this.handleBranch(args, state);
       case 'checkout':
         return this.handleCheckout(args, state);
+      case 'switchBranch':
+        return this.handleSwitch(args, state);
       case 'merge':
         return this.handleMerge(args, state);
       case 'rebase':
@@ -95,7 +114,7 @@ export class CommandParser {
     if (args.length === 0) {
       return {
         success: true,
-        message: state.branches.map(b => 
+        message: state.branches.map(b =>
           b.name === state.currentBranch ? `* ${b.name}` : `  ${b.name}`
         ).join('\n'),
       };
@@ -151,6 +170,50 @@ export class CommandParser {
       newState: {
         ...state,
         currentBranch: branchName,
+      },
+    };
+  }
+
+  private static handleSwitch(args: string[], state: GameState): CommandResult {
+    if (args[0] !== '-c' || !args[1]) {
+      return {
+        success: false,
+        message: '請使用 git switch -c 分支名稱 格式',
+      };
+    }
+
+    const branchName = args[1];
+    if (state.branches.some(b => b.name === branchName)) {
+      return {
+        success: false,
+        message: `分支 ${branchName} 已存在`,
+      };
+    }
+
+    const currentBranch = state.branches.find(b => b.name === state.currentBranch);
+    if (!currentBranch) {
+      return {
+        success: false,
+        message: '找不到當前分支',
+      };
+    }
+
+    const newBranch: Branch = {
+      name: branchName,
+      currentCommitId: currentBranch.currentCommitId,
+      commits: [...currentBranch.commits],
+      description: `這是 ${branchName} 分支，充滿未知的挑戰和機遇`,
+      options: ['繼續探索', '回到主線', '尋找新機會'],
+      achievements: [],
+    };
+
+    return {
+      success: true,
+      message: `已建立並切換到新分支 ${branchName}`,
+      newState: {
+        ...state,
+        currentBranch: branchName,
+        branches: [...state.branches, newBranch],
       },
     };
   }
@@ -227,7 +290,7 @@ export class CommandParser {
       };
     }
 
-    const logMessages = currentBranch.commits.map(commit => 
+    const logMessages = currentBranch.commits.map(commit =>
       `commit ${commit.id.slice(0, 7)}\nAuthor: 你 <you@life.com>\nDate: ${new Date(commit.timestamp).toLocaleString()}\n\n    ${commit.message}\n`
     );
 
@@ -244,4 +307,4 @@ export class CommandParser {
       newState: state,
     };
   }
-} 
+}

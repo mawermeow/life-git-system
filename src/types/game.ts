@@ -31,11 +31,12 @@ export interface GameState {
   achievements: Achievement[];
 }
 
-export type GitCommand = 
+export type GitCommand =
   | 'status'
   | 'commit'
   | 'branch'
   | 'checkout'
+  | 'switchBranch'
   | 'merge'
   | 'rebase'
   | 'reset'
@@ -46,4 +47,4 @@ export interface CommandResult {
   success: boolean;
   message: string;
   newState?: GameState;
-} 
+}

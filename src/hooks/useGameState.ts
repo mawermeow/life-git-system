@@ -80,6 +80,7 @@ const initialState: GameState = {
     '  git commit -m "訊息" - 記錄人生選擇',
     '  git branch 名稱   - 建立新的人生分支',
     '  git checkout 名稱 - 切換到不同的人生分支',
+    '  git switch -c 名稱 - 建立並切換到新分支',
     '  git merge 名稱    - 合併不同的人生選擇',
     '  git rebase        - 重新設定人生基底',
     '  git reset --hard HEAD~1 - 回到上一個選擇',
@@ -248,6 +249,11 @@ export const useGameState = () => {
         case 'checkout': {
           const branch = state.branches.find(b => b.name === args[0]);
           feedbackMessage = `🔀 已切換到分支：${args[0]}\n${branch?.description || '這是一個全新的開始！'}`;
+          break;
+        }
+        case 'switchBranch': {
+          const branch = state.branches.find(b => b.name === args[1]);
+          feedbackMessage = `✨ 成功建立並切換到新分支：${args[1]}\n${branch?.description || '這是一個全新的開始！'}`;
           break;
         }
         case 'commit': {
