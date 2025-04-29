@@ -243,6 +243,13 @@ export const useGameState = () => {
     let feedbackMessage = result.message;
     if (result.success) {
       switch (command) {
+        case 'clear':
+          // 清空終端機，不顯示任何訊息
+          setState(prev => ({
+            ...prev,
+            logs: [],
+          }));
+          return;
         case 'branch':
           if (args.length > 0) {
             feedbackMessage = `✨ 成功建立新分支：${args[0]}\n這是一個全新的開始，充滿無限可能！`;
