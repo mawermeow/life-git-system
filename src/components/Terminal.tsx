@@ -21,6 +21,7 @@ export const Terminal: React.FC = () => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
+  const [commandHistoryIndex, setCommandHistoryIndex] = useState(-1);
 
   // 游標閃爍效果
   useEffect(() => {
@@ -92,6 +93,7 @@ export const Terminal: React.FC = () => {
       setCurrentCommand('');
       setCursorPosition(0);
       setSuggestions([]);
+      setCommandHistoryIndex(-1);
       if (inputRef.current) {
         inputRef.current.focus();
       }
@@ -106,9 +108,13 @@ export const Terminal: React.FC = () => {
           prev > 0 ? prev - 1 : suggestions.length - 1
         );
       } else if (commandHistory.length > 0) {
-        // 如果沒有建議，則顯示歷史記錄
-        setCurrentCommand(commandHistory[commandHistory.length - 1]);
-        setCursorPosition(commandHistory[commandHistory.length - 1].length);
+        // 在歷史記錄中向上移動
+        const newIndex = commandHistoryIndex < commandHistory.length - 1 
+          ? commandHistoryIndex + 1 
+          : commandHistory.length - 1;
+        setCommandHistoryIndex(newIndex);
+        setCurrentCommand(commandHistory[commandHistory.length - 1 - newIndex]);
+        setCursorPosition(commandHistory[commandHistory.length - 1 - newIndex].length);
       }
     } else if (e.key === 'ArrowDown') {
       e.preventDefault();
@@ -117,7 +123,15 @@ export const Terminal: React.FC = () => {
         setSelectedSuggestionIndex(prev => 
           prev < suggestions.length - 1 ? prev + 1 : 0
         );
-      } else {
+      } else if (commandHistoryIndex > 0) {
+        // 在歷史記錄中向下移動
+        const newIndex = commandHistoryIndex - 1;
+        setCommandHistoryIndex(newIndex);
+        setCurrentCommand(commandHistory[commandHistory.length - 1 - newIndex]);
+        setCursorPosition(commandHistory[commandHistory.length - 1 - newIndex].length);
+      } else if (commandHistoryIndex === 0) {
+        // 回到最開始的狀態
+        setCommandHistoryIndex(-1);
         setCurrentCommand('');
         setCursorPosition(0);
       }
@@ -135,6 +149,8 @@ export const Terminal: React.FC = () => {
     const newValue = e.target.value;
     setCurrentCommand(newValue);
     setCursorPosition(e.target.selectionStart || newValue.length);
+    // 當用戶開始輸入時，重置歷史記錄索引
+    setCommandHistoryIndex(-1);
   };
 
   return (
