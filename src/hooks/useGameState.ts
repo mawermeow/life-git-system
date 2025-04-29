@@ -239,6 +239,35 @@ export const useGameState = () => {
     setCommandHistory(prev => [...prev, input]);
     setCurrentCommand('');
 
+    // 如果是 clear 指令，保留初始日誌訊息
+    if (command === 'clear') {
+      setState(prev => ({
+        ...prev,
+        logs: [
+          '歡迎來到人生 Git 系統！',
+          '',
+          '這是一個使用 Git 指令來操控人生的文字遊戲。',
+          '每個 Git 指令都會影響你的人生走向，創造不同的分支和結局。',
+          '',
+          '可用的指令：',
+          '  git status        - 查看當前人生狀態',
+          '  git commit -m "訊息" - 記錄人生選擇',
+          '  git branch 名稱   - 建立新的人生分支',
+          '  git checkout 名稱 - 切換到不同的人生分支',
+          '  git switch -c 名稱 - 建立並切換到新分支',
+          '  git merge 名稱    - 合併不同的人生選擇',
+          '  git rebase        - 重新設定人生基底',
+          '  git reset --hard HEAD~1 - 回到上一個選擇',
+          '  git log           - 查看人生歷程',
+          '  git push          - 推送人生變更',
+          '',
+          '輸入指令開始你的人生旅程吧！',
+          '',
+        ],
+      }));
+      return;
+    }
+
     // 依據指令類型調整訊息
     let feedbackMessage = result.message;
     if (result.success) {
@@ -388,6 +417,29 @@ export const useGameState = () => {
           if (deathChance < 0.3) {
             handleDeath(currentBranch.name);
           }
+        }
+      }
+
+      // 如果是 checkout 或 switchBranch 指令，生成故事
+      if (command === 'checkout' || command === 'switchBranch') {
+        setIsLoading(true);
+        try {
+          const previousBranch = state.currentBranch;
+          const currentBranch = args[command === 'checkout' ? 0 : 1];
+          const story = await StoryGenerator.getStoryForCheckout(
+            currentBranch,
+            previousBranch,
+            newState
+          );
+
+          setState(prev => ({
+            ...prev,
+            logs: [...prev.logs, '', story, ''],
+          }));
+        } catch (error) {
+          console.error('生成故事失敗:', error);
+        } finally {
+          setIsLoading(false);
         }
       }
 
