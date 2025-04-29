@@ -197,7 +197,7 @@ export const Terminal: React.FC = () => {
         </div>
         <button
           onClick={() => setShowAchievements(!showAchievements)}
-          className="text-xs text-[#8a8a8a] hover:text-[#f0f0f0]"
+          className="text-xs text-[#8a8a8a] hover:text-[#f0f0f0] z-20"
         >
           {showAchievements ? '隱藏成就' : '顯示成就'}
         </button>
