@@ -100,18 +100,28 @@ export const Terminal: React.FC = () => {
       handleTabComplete();
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      if (commandHistory.length > 0) {
+      if (suggestions.length > 0) {
+        // 在建議列表中向上移動
+        setSelectedSuggestionIndex(prev => 
+          prev > 0 ? prev - 1 : suggestions.length - 1
+        );
+      } else if (commandHistory.length > 0) {
+        // 如果沒有建議，則顯示歷史記錄
         setCurrentCommand(commandHistory[commandHistory.length - 1]);
         setCursorPosition(commandHistory[commandHistory.length - 1].length);
-        setSuggestions([]);
       }
     } else if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setCurrentCommand('');
-      setCursorPosition(0);
-      setSuggestions([]);
+      if (suggestions.length > 0) {
+        // 在建議列表中向下移動
+        setSelectedSuggestionIndex(prev => 
+          prev < suggestions.length - 1 ? prev + 1 : 0
+        );
+      } else {
+        setCurrentCommand('');
+        setCursorPosition(0);
+      }
     } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-      // 左右移動時即時更新 cursorPosition
       requestAnimationFrame(() => {
         if (inputRef.current) {
           setCursorPosition(inputRef.current.selectionStart || 0);

@@ -1,6 +1,10 @@
 import { GitCommand, CommandResult, GameState, Branch } from '../types/game';
 
-const validCommands = ['status', 'commit', 'branch', 'checkout', 'switch', 'switchBranch', 'merge', 'rebase', 'reset', 'log', 'push'] as const;
+// 對外顯示的指令列表
+const displayCommands = ['status', 'commit', 'branch', 'checkout', 'switch', 'merge', 'rebase', 'reset', 'log', 'push'] as const;
+
+// 內部使用的指令列表（包含 switchBranch）
+const validCommands = [...displayCommands, 'switchBranch'] as const;
 
 function isValidCommand(command: string): command is typeof validCommands[number] {
   return (validCommands as readonly string[]).includes(command);
@@ -322,7 +326,7 @@ export class CommandParser {
     if (parts[0] !== 'git') return [];
 
     const currentInput = parts[1] || '';
-    return validCommands.filter(cmd => 
+    return displayCommands.filter(cmd => 
       cmd.startsWith(currentInput) && cmd !== currentInput
     );
   }
