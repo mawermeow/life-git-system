@@ -57,7 +57,7 @@ export const Terminal: React.FC = () => {
       const command = parts[1] as any;
       const currentArgs = parts.slice(2);
       const argSuggestions = CommandParser.getCommandArgsSuggestions(command, currentArgs);
-      
+
       if (argSuggestions.length > 0) {
         const selectedSuggestion = argSuggestions[selectedSuggestionIndex];
         setCurrentCommand(`git ${command} ${selectedSuggestion}`);
@@ -107,13 +107,13 @@ export const Terminal: React.FC = () => {
       e.preventDefault();
       if (suggestions.length > 0) {
         // 在建議列表中向上移動
-        setSelectedSuggestionIndex(prev => 
+        setSelectedSuggestionIndex(prev =>
           prev > 0 ? prev - 1 : suggestions.length - 1
         );
       } else if (commandHistory.length > 0) {
         // 在歷史記錄中向上移動
-        const newIndex = commandHistoryIndex < commandHistory.length - 1 
-          ? commandHistoryIndex + 1 
+        const newIndex = commandHistoryIndex < commandHistory.length - 1
+          ? commandHistoryIndex + 1
           : commandHistory.length - 1;
         setCommandHistoryIndex(newIndex);
         setCurrentCommand(commandHistory[commandHistory.length - 1 - newIndex]);
@@ -123,7 +123,7 @@ export const Terminal: React.FC = () => {
       e.preventDefault();
       if (suggestions.length > 0) {
         // 在建議列表中向下移動
-        setSelectedSuggestionIndex(prev => 
+        setSelectedSuggestionIndex(prev =>
           prev < suggestions.length - 1 ? prev + 1 : 0
         );
       } else if (commandHistoryIndex > 0) {
@@ -190,7 +190,7 @@ export const Terminal: React.FC = () => {
         </button>
       </div>
 
-      <div className="p-4 pt-6 pb-4 h-[calc(100%-2.5rem)] flex flex-col">
+      <div className="p-4 pt-6 pb-4 h-[calc(100%)] flex flex-col">
         <motion.div
           ref={terminalRef}
           className="overflow-y-auto flex-1 w-full mb-4"

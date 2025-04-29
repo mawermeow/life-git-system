@@ -181,7 +181,8 @@ export class CommandParser {
       };
     }
 
-    const message = args[1].replace(/"/g, '');
+    // 將所有參數（除了 -m）合併成一個訊息
+    const message = args.slice(1).join(' ').replace(/^"?(.+?)(?:"|$)/, '$1');
     const newCommit = {
       id: Date.now().toString(),
       message,

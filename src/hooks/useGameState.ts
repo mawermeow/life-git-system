@@ -219,11 +219,6 @@ export const useGameState = () => {
   const executeCommand = useCallback(async (input: string) => {
     if (!input.trim()) return;
 
-    setState(prev => ({
-      ...prev,
-      logs: [...prev.logs, `$ ${input}`],
-    }));
-
     const parsed = CommandParser.parse(input);
     if (!parsed) {
       setState(prev => ({
@@ -362,7 +357,7 @@ export const useGameState = () => {
           break;
         }
         case 'commit': {
-          const commitMessage = args.join(' ').replace(/^-m\s*"?(.+?)"?$/, '$1') || '';
+          const commitMessage = args.join(' ').replace(/^-m\s*"?(.+?)(?:"|$)/, '$1') || '';
           if (commitMessage) {
             const commitResponses = [
               `📝 記錄了這個時刻：「${commitMessage}」`,
