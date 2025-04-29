@@ -103,32 +103,68 @@ export const useGameState = () => {
   const checkAchievements = useCallback((newState: GameState) => {
     const newAchievements = [...newState.achievements];
 
-    // 檢查第一次提交
-    if (!newAchievements[0].unlocked && newState.branches[0].commits.length > 1) {
-      newAchievements[0].unlocked = true;
-      setState(prev => ({
-        ...prev,
-        logs: [...prev.logs, '🎉 成就解鎖：第一次選擇！'],
-      }));
+    // 第一次選擇：main 分支至少有 2 個 commit
+    if (!newAchievements[0].unlocked) {
+      const mainBranch = newState.branches.find(b => b.name === 'main');
+      if (mainBranch && mainBranch.commits.length > 1) {
+        newAchievements[0].unlocked = true;
+        setState(prev => ({
+          ...prev,
+          logs: [...prev.logs, '🎉 成就解鎖：第一次選擇！'],
+        }));
+      }
     }
 
-    // 檢查分支大師
-    if (!newAchievements[1].unlocked && newState.branches.length >= 3) {
-      newAchievements[1].unlocked = true;
-      setState(prev => ({
-        ...prev,
-        logs: [...prev.logs, '🎉 成就解鎖：分支大師！'],
-      }));
+    // 分支大師：不同分支至少有 1 次 commit
+    if (!newAchievements[1].unlocked) {
+      const hasEnoughBranchCommits = newState.branches.filter(b => b.commits.length > 1).length >= 3;
+      if (hasEnoughBranchCommits) {
+        newAchievements[1].unlocked = true;
+        setState(prev => ({
+          ...prev,
+          logs: [...prev.logs, '🎉 成就解鎖：分支大師！'],
+        }));
+      }
     }
 
-    // 檢查倖存者成就
-    const currentBranch = newState.branches.find(b => b.name === newState.currentBranch);
-    if (currentBranch?.name === 'dangerous' && !newAchievements[3].unlocked) {
-      newAchievements[3].unlocked = true;
-      setState(prev => ({
-        ...prev,
-        logs: [...prev.logs, '🎉 成就解鎖：倖存者！'],
-      }));
+    // 時空旅人：使用 reset 指令
+    if (!newAchievements[2].unlocked) {
+      const usedReset = newState.logs.some(log => log.includes('reset'));
+      if (usedReset) {
+        newAchievements[2].unlocked = true;
+        setState(prev => ({
+          ...prev,
+          logs: [...prev.logs, '🎉 成就解鎖：時空旅人！'],
+        }));
+      }
+    }
+
+    // 倖存者：在 dangerous 分支提交兩次且未死亡
+    if (!newAchievements[3].unlocked) {
+      const dangerousBranch = newState.branches.find(b => b.name === 'dangerous');
+      if (dangerousBranch && dangerousBranch.commits.length >= 3) {
+        newAchievements[3].unlocked = true;
+        setState(prev => ({
+          ...prev,
+          logs: [...prev.logs, '🎉 成就解鎖：倖存者！'],
+        }));
+      }
+    }
+
+    // 探索者：checkout 過至少 5 個不同分支
+    if (!newAchievements[4].unlocked) {
+      const checkoutLogs = newState.logs.filter(log => log.includes('checkout'));
+      const checkedOutBranches = new Set(checkoutLogs.map(log => {
+        const match = log.match(/checkout\s+(\w+)/);
+        return match?.[1];
+      }).filter(Boolean));
+      if (checkedOutBranches.size >= 5) {
+        newAchievements[4].unlocked = true;
+        setState(prev => ({
+          ...prev,
+          logs: [...prev.logs, '🎉 成就解鎖：探索者！'],
+        }));
+      }
     }
 
     setState(prev => ({
