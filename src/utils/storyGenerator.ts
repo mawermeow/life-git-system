@@ -8,35 +8,15 @@ interface StoryContext {
 
 export class StoryGenerator {
   private static async generateStory(context: StoryContext): Promise<string> {
+    const { currentBranch, currentCommit, branches } = context;
+    const branchNames = branches.map(b => b.name).join(', ');
+    
     const prompt = this.buildPrompt(context);
     try {
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model: 'gpt-3.5-turbo',
-          messages: [
-            {
-              role: 'system',
-              content: '你是一個富有哲學思維和幽默感的敘事者，擅長用輕鬆的方式講述深刻的人生故事。你的故事應該包含：1. 選擇的即時影響 2. 可能的未來發展 3. 一個有趣的比喻或啟示。',
-            },
-            {
-              role: 'user',
-              content: prompt,
-            },
-          ],
-          temperature: 0.8,
-          max_tokens: 300,
-        }),
-      });
-
-      const data = await response.json();
-      return data.choices[0].message.content;
+      // 這裡可以整合 AI 生成更豐富的故事
+      return this.getFallbackStory(context);
     } catch (error) {
-      console.error('故事生成失敗:', error);
+      console.error('生成故事失敗:', error);
       return this.getFallbackStory(context);
     }
   }
@@ -53,8 +33,16 @@ export class StoryGenerator {
   }
 
   private static getFallbackStory(context: StoryContext): string {
-    const { currentCommit } = context;
-    return `你選擇了「${currentCommit.message}」。這是一個重要的決定，它將影響你的人生走向。`;
+    const { currentCommit, currentBranch } = context;
+    const stories = [
+      `在「${currentBranch}」的道路上，你選擇了「${currentCommit.message}」。這個決定像一顆石子投入平靜的湖面，激起層層漣漪，影響著你未來的每一步。`,
+      `「${currentCommit.message}」——這不僅僅是一個選擇，更是一個承諾。在「${currentBranch}」的旅程中，你將為這個決定付出代價，也將收穫成長。`,
+      `人生就像一本書，在「${currentBranch}」這一章，你寫下了「${currentCommit.message}」。這個選擇將如何影響故事的走向？只有時間能給出答案。`,
+      `站在「${currentBranch}」的十字路口，你選擇了「${currentCommit.message}」。這個決定或許微不足道，卻可能改變你的人生軌跡。`,
+      `「${currentCommit.message}」——在「${currentBranch}」的旅程中，這是一個重要的里程碑。它標誌著你選擇了這條路，也意味著放棄了其他可能性。`
+    ];
+    
+    return stories[Math.floor(Math.random() * stories.length)];
   }
 
   static async getStoryForCommit(commit: Commit, state: { branches: Branch[], currentBranch: string }): Promise<string> {

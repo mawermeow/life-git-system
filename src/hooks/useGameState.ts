@@ -8,6 +8,7 @@ interface Achievement {
   title: string;
   description: string;
   unlocked: boolean;
+  branch: string;
 }
 
 const initialAchievements: Achievement[] = [
@@ -16,18 +17,35 @@ const initialAchievements: Achievement[] = [
     title: '第一次選擇',
     description: '完成第一次人生選擇',
     unlocked: false,
+    branch: 'main',
   },
   {
     id: 'branch_master',
     title: '分支大師',
     description: '創建 3 個不同的分支',
     unlocked: false,
+    branch: 'main',
   },
   {
     id: 'time_traveler',
     title: '時空旅人',
     description: '使用 reset 回到過去',
     unlocked: false,
+    branch: 'main',
+  },
+  {
+    id: 'survivor',
+    title: '倖存者',
+    description: '在危險的分支中存活下來',
+    unlocked: false,
+    branch: 'dangerous',
+  },
+  {
+    id: 'explorer',
+    title: '探索者',
+    description: '探索所有可能的分支',
+    unlocked: false,
+    branch: 'main',
   },
 ];
 
@@ -44,6 +62,9 @@ const initialState: GameState = {
           parentIds: [],
         },
       ],
+      description: '這是你的主線人生，充滿無限可能',
+      options: ['學習新技能', '開始新工作', '建立新關係'],
+      achievements: ['first_commit', 'branch_master', 'time_traveler', 'explorer'],
     },
   ],
   currentBranch: 'main',
@@ -68,6 +89,8 @@ const initialState: GameState = {
     '輸入指令開始你的人生旅程吧！',
     '',
   ],
+  bannedBranches: [],
+  achievements: initialAchievements,
 };
 
 export const useGameState = () => {
@@ -75,10 +98,9 @@ export const useGameState = () => {
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [currentCommand, setCurrentCommand] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [achievements, setAchievements] = useState<Achievement[]>(initialAchievements);
 
   const checkAchievements = useCallback((newState: GameState) => {
-    const newAchievements = [...achievements];
+    const newAchievements = [...newState.achievements];
 
     // 檢查第一次提交
     if (!newAchievements[0].unlocked && newState.branches[0].commits.length > 1) {
@@ -98,13 +120,44 @@ export const useGameState = () => {
       }));
     }
 
-    setAchievements(newAchievements);
-  }, [achievements]);
+    // 檢查倖存者成就
+    const currentBranch = newState.branches.find(b => b.name === newState.currentBranch);
+    if (currentBranch?.name === 'dangerous' && !newAchievements[3].unlocked) {
+      newAchievements[3].unlocked = true;
+      setState(prev => ({
+        ...prev,
+        logs: [...prev.logs, '🎉 成就解鎖：倖存者！'],
+      }));
+    }
+
+    setState(prev => ({
+      ...prev,
+      achievements: newAchievements,
+    }));
+  }, []);
+
+  const handleDeath = useCallback((branchName: string) => {
+    setState(prev => {
+      const newBranches = prev.branches.filter(b => b.name !== branchName);
+      return {
+        ...prev,
+        branches: newBranches,
+        currentBranch: 'main',
+        bannedBranches: [...prev.bannedBranches, branchName],
+        logs: [
+          ...prev.logs,
+          `⚠️ 警告：在分支「${branchName}」中發生了意外！`,
+          '系統已自動將你送回主線人生。',
+          `分支「${branchName}」已被永久禁止。`,
+          '',
+        ],
+      };
+    });
+  }, []);
 
   const executeCommand = useCallback(async (input: string) => {
     if (!input.trim()) return;
 
-    // 先顯示用戶輸入的指令
     setState(prev => ({
       ...prev,
       logs: [...prev.logs, `$ ${input}`],
@@ -125,7 +178,6 @@ export const useGameState = () => {
     setCommandHistory(prev => [...prev, input]);
     setCurrentCommand('');
 
-    // 顯示命令執行結果
     setState(prev => ({
       ...prev,
       logs: [...prev.logs, result.message, ''],
@@ -141,6 +193,17 @@ export const useGameState = () => {
         ...result.newState,
       }));
       checkAchievements(newState);
+
+      // 檢查是否觸發死亡事件
+      if (command === 'commit') {
+        const currentBranch = newState.branches.find(b => b.name === newState.currentBranch);
+        if (currentBranch?.name.includes('dangerous')) {
+          const deathChance = Math.random();
+          if (deathChance < 0.3) {
+            handleDeath(currentBranch.name);
+          }
+        }
+      }
 
       // 如果是 commit 指令，生成故事
       if (command === 'commit') {
@@ -168,15 +231,15 @@ export const useGameState = () => {
         }
       }
     }
-  }, [state, checkAchievements]);
+  }, [state, checkAchievements, handleDeath]);
 
   return {
     state,
-    commandHistory,
+    executeCommand,
     currentCommand,
     setCurrentCommand,
-    executeCommand,
     isLoading,
-    achievements,
+    commandHistory,
+    achievements: state.achievements,
   };
 };
