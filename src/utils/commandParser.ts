@@ -115,7 +115,6 @@ export class CommandParser {
   }
 
   private static handleBranch(args: string[], state: GameState): CommandResult {
-    console.log({args,state})
     if (!state.branches || state.branches.length === 0) {
       return {
         success: false,
@@ -124,7 +123,6 @@ export class CommandParser {
     }
 
     if (args.length === 0) {
-      console.log("meow")
       return {
         success: true,
         message: state.branches.map(b =>
@@ -326,7 +324,7 @@ export class CommandParser {
     if (parts[0] !== 'git') return [];
 
     const currentInput = parts[1] || '';
-    return displayCommands.filter(cmd => 
+    return displayCommands.filter(cmd =>
       cmd.startsWith(currentInput) && cmd !== currentInput
     );
   }

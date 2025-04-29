@@ -244,7 +244,11 @@ export const useGameState = () => {
     if (result.success) {
       switch (command) {
         case 'branch':
-          feedbackMessage = `✨ 成功建立新分支：${args[0]}\n這是一個全新的開始，充滿無限可能！`;
+          if (args.length > 0) {
+            feedbackMessage = `✨ 成功建立新分支：${args[0]}\n這是一個全新的開始，充滿無限可能！`;
+          } else {
+            feedbackMessage = result.message;
+          }
           break;
         case 'checkout': {
           const branch = state.branches.find(b => b.name === args[0]);
