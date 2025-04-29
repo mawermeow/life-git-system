@@ -243,45 +243,128 @@ export const useGameState = () => {
     let feedbackMessage = result.message;
     if (result.success) {
       switch (command) {
-        case 'clear':
-          // 清空終端機，不顯示任何訊息
-          setState(prev => ({
-            ...prev,
-            logs: [],
-          }));
-          return;
-        case 'branch':
+        case 'branch': {
           if (args.length > 0) {
-            feedbackMessage = `✨ 成功建立新分支：${args[0]}\n這是一個全新的開始，充滿無限可能！`;
+            const branchName = args[0];
+            const branchThemes = {
+              career: ['職場', '工作', '事業', '創業'],
+              study: ['學習', '進修', '研究', '讀書'],
+              relationship: ['感情', '友情', '親情', '人際'],
+              travel: ['旅行', '冒險', '探索', '流浪'],
+              health: ['健康', '運動', '養生', '健身'],
+              art: ['藝術', '創作', '音樂', '繪畫'],
+              default: ['未知', '神秘', '新奇', '特別']
+            };
+
+            // 根據分支名稱判斷主題
+            let theme = 'default';
+            for (const [key, words] of Object.entries(branchThemes)) {
+              if (words.some(word => branchName.includes(word))) {
+                theme = key;
+                break;
+              }
+            }
+
+            const themeResponses = {
+              career: [
+                `✨ 你決定開創新的職場道路：${branchName}`,
+                `✨ 在 ${branchName} 這條職場路上，充滿了機遇與挑戰`,
+                `✨ 你踏上了 ${branchName} 的職業旅程`
+              ],
+              study: [
+                `📚 你開始了 ${branchName} 的學習之旅`,
+                `📚 在知識的海洋中，你選擇了 ${branchName} 的方向`,
+                `📚 ${branchName} 的學習之路，將帶給你新的視野`
+              ],
+              relationship: [
+                `💝 你開啟了 ${branchName} 的情感篇章`,
+                `💝 在 ${branchName} 的關係中，你將經歷成長與改變`,
+                `💝 你選擇探索 ${branchName} 的人際關係`
+              ],
+              travel: [
+                `🌍 你踏上了 ${branchName} 的冒險之旅`,
+                `🌍 在 ${branchName} 的旅程中，你將發現新的世界`,
+                `🌍 你選擇了 ${branchName} 的探索之路`
+              ],
+              health: [
+                `💪 你開始了 ${branchName} 的健康計劃`,
+                `💪 在 ${branchName} 的道路上，你將變得更強壯`,
+                `💪 你選擇了 ${branchName} 的生活方式`
+              ],
+              art: [
+                `🎨 你開啟了 ${branchName} 的創作之旅`,
+                `🎨 在 ${branchName} 的藝術世界中，你將展現才華`,
+                `🎨 你選擇了 ${branchName} 的創意道路`
+              ],
+              default: [
+                `✨ 你開啟了 ${branchName} 的新篇章`,
+                `✨ 在 ${branchName} 的道路上，充滿了未知與可能`,
+                `✨ 你選擇了 ${branchName} 的探索之路`
+              ]
+            };
+
+            const responses = themeResponses[theme as keyof typeof themeResponses];
+            feedbackMessage = responses[Math.floor(Math.random() * responses.length)];
           } else {
             feedbackMessage = result.message;
           }
           break;
+        }
         case 'checkout': {
-          const branch = state.branches.find(b => b.name === args[0]);
-          feedbackMessage = `🔀 已切換到分支：${args[0]}\n${branch?.description || '這是一個全新的開始！'}`;
+          const branchName = args[0];
+          const branch = state.branches.find(b => b.name === branchName);
+          const checkoutResponses = [
+            `🔀 你回到了 ${branchName} 的道路上`,
+            `🔀 你切換到了 ${branchName} 的人生軌跡`,
+            `🔀 你重新踏上了 ${branchName} 的旅程`
+          ];
+          feedbackMessage = `${checkoutResponses[Math.floor(Math.random() * checkoutResponses.length)]}\n${branch?.description || '這是一個全新的開始！'}`;
           break;
         }
         case 'switchBranch': {
-          const branch = state.branches.find(b => b.name === args[1]);
-          feedbackMessage = `✨ 成功建立並切換到新分支：${args[1]}\n${branch?.description || '這是一個全新的開始！'}`;
+          const branchName = args[1];
+          const branch = state.branches.find(b => b.name === branchName);
+          const switchResponses = [
+            `✨ 你開創了 ${branchName} 的新道路`,
+            `✨ 你踏上了 ${branchName} 的探索之旅`,
+            `✨ 你選擇了 ${branchName} 的人生方向`
+          ];
+          feedbackMessage = `${switchResponses[Math.floor(Math.random() * switchResponses.length)]}\n${branch?.description || '這是一個全新的開始！'}`;
           break;
         }
         case 'commit': {
           const commitMessage = args.join(' ').replace(/^-m\s*"?(.+?)"?$/, '$1') || '';
           if (commitMessage) {
-            feedbackMessage = `✅ 人生新紀錄已提交：「${commitMessage}」`;
+            const commitResponses = [
+              `📝 記錄了這個時刻：「${commitMessage}」`,
+              `📝 將這個變更保存下來：「${commitMessage}」`,
+              `📝 更新了人生日誌：「${commitMessage}」`
+            ];
+            feedbackMessage = commitResponses[Math.floor(Math.random() * commitResponses.length)];
           } else if (result.message) {
             feedbackMessage = result.message;
           }
           break;
         }
-        case 'merge':
-          feedbackMessage = `🔗 成功合併分支：${args[0]}\n這是一個重要的轉折點！`;
+        case 'merge': {
+          const branchName = args[0];
+          const mergeResponses = [
+            `🤝 你將 ${branchName} 的經歷融入了當前的人生`,
+            `🤝 你整合了 ${branchName} 的經驗與教訓`,
+            `🤝 你將 ${branchName} 的收穫帶入了現在的生活`
+          ];
+          feedbackMessage = mergeResponses[Math.floor(Math.random() * mergeResponses.length)];
           break;
-        case 'reset':
-          feedbackMessage = '⏳ 回到上一個人生選擇！';
+        }
+        case 'reset': {
+          const resetResponses = [
+            '⏳ 你決定回到上一個人生選擇點',
+            '⏳ 你選擇重新思考這個決定',
+            '⏳ 你回到了人生的上一個十字路口'
+          ];
+          feedbackMessage = resetResponses[Math.floor(Math.random() * resetResponses.length)];
           break;
+        }
         default:
           feedbackMessage = result.message;
       }
@@ -291,7 +374,7 @@ export const useGameState = () => {
       const newState = {
         ...state,
         ...result.newState,
-        logs: [...state.logs, feedbackMessage, ''],
+        logs: [...state.logs, `$ ${input}`, feedbackMessage, ''],
       };
       setState(newState);
       checkAchievements(newState);
@@ -336,7 +419,7 @@ export const useGameState = () => {
     } else {
       setState(prev => ({
         ...prev,
-        logs: [...prev.logs, feedbackMessage, ''],
+        logs: [...prev.logs, `$ ${input}`, feedbackMessage, ''],
       }));
     }
   }, [state, checkAchievements, checkFinalGoals, handleDeath]);

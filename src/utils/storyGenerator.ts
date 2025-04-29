@@ -25,7 +25,7 @@ export class StoryGenerator {
           messages: [
             {
               role: 'system',
-              content: '你是一個富有哲學思維和幽默感的敘事者，擅長用輕鬆的方式講述深刻的人生故事。你的故事應該包含：1. 選擇的即時影響 2. 可能的未來發展 3. 一個有趣的比喻或啟示。',
+              content: '你是一個富有哲學思維和幽默感的敘事者，擅長用輕鬆的方式講述深刻的人生故事。你的故事應該包含：1. 這個變更的意義 2. 對當前分支的影響 3. 一個有趣的比喻或啟示。',
             },
             {
               role: 'user',
@@ -49,21 +49,21 @@ export class StoryGenerator {
     const { currentBranch, currentCommit, branches } = context;
     const branchNames = branches.map(b => b.name).join(', ');
 
-    return `你正在經歷一個人生選擇。當前分支是「${currentBranch}」，你剛剛做了以下選擇：「${currentCommit.message}」。
+    return `你正在記錄一個人生變更。當前分支是「${currentBranch}」，你剛剛記錄了以下commit：「${currentCommit.message}」。
     
     你的人生分支有：${branchNames}。
     
-    請用幽默且富有哲學意味的方式，描述這個選擇對你人生的影響。保持簡潔，不要超過 100 字。`;
+    請用幽默且富有哲學意味的方式，描述這個變更的意義和影響。保持簡潔，不要超過 100 字。`;
   }
 
   private static getFallbackStory(context: StoryContext): string {
     const { currentCommit, currentBranch } = context;
     const stories = [
-      `在「${currentBranch}」的道路上，你選擇了「${currentCommit.message}」。這個決定像一顆石子投入平靜的湖面，激起層層漣漪，影響著你未來的每一步。`,
-      `「${currentCommit.message}」——這不僅僅是一個選擇，更是一個承諾。在「${currentBranch}」的旅程中，你將為這個決定付出代價，也將收穫成長。`,
-      `人生就像一本書，在「${currentBranch}」這一章，你寫下了「${currentCommit.message}」。這個選擇將如何影響故事的走向？只有時間能給出答案。`,
-      `站在「${currentBranch}」的十字路口，你選擇了「${currentCommit.message}」。這個決定或許微不足道，卻可能改變你的人生軌跡。`,
-      `「${currentCommit.message}」——在「${currentBranch}」的旅程中，這是一個重要的里程碑。它標誌著你選擇了這條路，也意味著放棄了其他可能性。`
+      `在「${currentBranch}」的旅程中，你記錄了commit「${currentCommit.message}」。這個變更像一顆石子投入平靜的湖面，激起層層漣漪，影響著你未來的每一步。`,
+      `「${currentCommit.message}」——這不僅僅是一個變更，更是一個里程碑。在「${currentBranch}」的旅程中，你將為這個變更付出代價，也將收穫成長。`,
+      `人生就像一本書，在「${currentBranch}」這一章，你記錄了「${currentCommit.message}」。這個變更將如何影響故事的走向？只有時間能給出答案。`,
+      `站在「${currentBranch}」的十字路口，你記錄了「${currentCommit.message}」。這個變更或許微不足道，卻可能改變你的人生軌跡。`,
+      `「${currentCommit.message}」——在「${currentBranch}」的旅程中，這是一個重要的記錄。它標誌著你經歷了這個時刻，也意味著你將繼續前進。`
     ];
 
     return stories[Math.floor(Math.random() * stories.length)];

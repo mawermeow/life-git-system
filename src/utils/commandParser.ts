@@ -90,7 +90,7 @@ export class CommandParser {
   matrix           - 進入矩陣世界
             `,
           };
-        case 'life':
+        case 'life': {
           const lifeQuotes = [
             '人生就像 Git，每個選擇都是一個分支',
             '有時候，最好的選擇是 reset --hard',
@@ -102,7 +102,8 @@ export class CommandParser {
             success: true,
             message: lifeQuotes[Math.floor(Math.random() * lifeQuotes.length)],
           };
-        case 'fortune':
+        }
+        case 'fortune': {
           const fortunes = [
             '今天適合創建新分支，探索未知',
             '小心危險的分支，可能會遇到意外',
@@ -114,7 +115,8 @@ export class CommandParser {
             success: true,
             message: fortunes[Math.floor(Math.random() * fortunes.length)],
           };
-        case 'matrix':
+        }
+        case 'matrix': {
           const matrixChars = '01';
           let matrixMessage = '';
           for (let i = 0; i < 10; i++) {
@@ -128,6 +130,7 @@ export class CommandParser {
             success: true,
             message: matrixMessage,
           };
+        }
       }
     }
 
@@ -421,13 +424,13 @@ export class CommandParser {
       // 如果只輸入了一個單詞，同時顯示 Git 指令和內建指令
       const currentInput = parts[0];
       const gitCommands = currentInput === 'git' ? displayCommands : [];
-      const builtinSuggestions = builtinCommands.filter(cmd => 
+      const builtinSuggestions = builtinCommands.filter(cmd =>
         cmd.startsWith(currentInput) && cmd !== currentInput
       );
       return [...gitCommands, ...builtinSuggestions];
     } else if (parts[0] === 'git') {
       const currentInput = parts[1] || '';
-      return displayCommands.filter(cmd => 
+      return displayCommands.filter(cmd =>
         cmd.startsWith(currentInput) && cmd !== currentInput
       );
     }
