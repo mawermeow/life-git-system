@@ -22,6 +22,7 @@ export const Terminal: React.FC = () => {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
   const [commandHistoryIndex, setCommandHistoryIndex] = useState(-1);
+  const [suggestionPosition, setSuggestionPosition] = useState({ top: 0, left: 0, width: 0 });
 
   // 游標閃爍效果
   useEffect(() => {
@@ -85,6 +86,18 @@ export const Terminal: React.FC = () => {
       setSuggestions([]);
     }
   }, [currentCommand]);
+
+  // 更新建議列表位置
+  useEffect(() => {
+    if (suggestions.length > 0 && inputRef.current) {
+      const rect = inputRef.current.getBoundingClientRect();
+      setSuggestionPosition({
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+        width: rect.width
+      });
+    }
+  }, [suggestions]);
 
   // 處理鍵盤事件
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -190,7 +203,7 @@ export const Terminal: React.FC = () => {
         </button>
       </div>
 
-      <div className="p-4 pt-6 pb-4 h-[calc(100%)] flex flex-col">
+      <div className="p-4 pt-6 pb-4 h-[calc(100%)] flex flex-col relative">
         <motion.div
           ref={terminalRef}
           className="overflow-y-auto flex-1 w-full mb-4"
@@ -269,7 +282,7 @@ export const Terminal: React.FC = () => {
 
         {/* 輸入區域 */}
         <motion.div
-          className="flex items-center px-2 py-1 w-full bg-[#2d2d2d] rounded"
+          className="flex items-center px-2 py-1 w-full bg-[#2d2d2d] rounded relative"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
@@ -291,11 +304,18 @@ export const Terminal: React.FC = () => {
               disabled={isLoading}
             />
             {suggestions.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-[#2d2d2d] rounded shadow-lg">
+              <div
+                className="fixed bg-[#2d2d2d] rounded shadow-lg max-h-[200px] overflow-y-auto z-50"
+                style={{
+                  top: suggestionPosition.top,
+                  left: suggestionPosition.left,
+                  width: suggestionPosition.width
+                }}
+              >
                 {suggestions.map((suggestion, index) => (
                   <div
                     key={suggestion}
-                    className={`px-2 py-1 cursor-pointer ${
+                    className={`px-2 py-1 cursor-pointer hover:bg-[#3d3d3d] ${
                       index === selectedSuggestionIndex ? 'bg-[#3d3d3d]' : ''
                     }`}
                     onClick={() => {
