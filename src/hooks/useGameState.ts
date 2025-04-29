@@ -98,6 +98,7 @@ export const useGameState = () => {
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [currentCommand, setCurrentCommand] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [finalGoals, setFinalGoals] = useState(2);
 
   const checkAchievements = useCallback((newState: GameState) => {
     const newAchievements = [...newState.achievements];
@@ -134,6 +135,29 @@ export const useGameState = () => {
       ...prev,
       achievements: newAchievements,
     }));
+  }, []);
+
+  const checkFinalGoals = useCallback((newState: GameState) => {
+    const activeBranches = newState.branches.length;
+    const deaths = newState.bannedBranches.length;
+
+    // 最終目標數量：2 + (分支數 / 2)，每死亡3次扣1個目標，最少1個
+    const calculatedGoals = Math.max(1, 2 + Math.floor(activeBranches / 2) - Math.floor(deaths / 3));
+    setFinalGoals(calculatedGoals);
+
+    const unlockedAchievements = newState.achievements.filter(a => a.unlocked).length;
+    if (unlockedAchievements >= calculatedGoals) {
+      setState({
+        ...initialState,
+        logs: [
+          ...newState.logs,
+          '',
+          '🎯 恭喜你達成所有人生目標！重啟新人生旅程。',
+          '',
+        ],
+        bannedBranches: [], // 清空死亡禁令
+      });
+    }
   }, []);
 
   const handleDeath = useCallback((branchName: string) => {
@@ -193,6 +217,7 @@ export const useGameState = () => {
         ...result.newState,
       }));
       checkAchievements(newState);
+      checkFinalGoals(newState);
 
       // 檢查是否觸發死亡事件
       if (command === 'commit') {
@@ -231,7 +256,7 @@ export const useGameState = () => {
         }
       }
     }
-  }, [state, checkAchievements, handleDeath]);
+  }, [state, checkAchievements, checkFinalGoals, handleDeath]);
 
   return {
     state,

@@ -10,7 +10,7 @@ export class StoryGenerator {
   private static async generateStory(context: StoryContext): Promise<string> {
     const { currentBranch, currentCommit, branches } = context;
     const branchNames = branches.map(b => b.name).join(', ');
-    
+
     const prompt = this.buildPrompt(context);
     try {
       // 這裡可以整合 AI 生成更豐富的故事
@@ -24,7 +24,7 @@ export class StoryGenerator {
   private static buildPrompt(context: StoryContext): string {
     const { currentBranch, currentCommit, branches } = context;
     const branchNames = branches.map(b => b.name).join(', ');
-    
+
     return `你正在經歷一個人生選擇。當前分支是「${currentBranch}」，你剛剛做了以下選擇：「${currentCommit.message}」。
     
     你的人生分支有：${branchNames}。
@@ -41,7 +41,7 @@ export class StoryGenerator {
       `站在「${currentBranch}」的十字路口，你選擇了「${currentCommit.message}」。這個決定或許微不足道，卻可能改變你的人生軌跡。`,
       `「${currentCommit.message}」——在「${currentBranch}」的旅程中，這是一個重要的里程碑。它標誌著你選擇了這條路，也意味著放棄了其他可能性。`
     ];
-    
+
     return stories[Math.floor(Math.random() * stories.length)];
   }
 
@@ -53,4 +53,4 @@ export class StoryGenerator {
     };
     return this.generateStory(context);
   }
-} 
+}
