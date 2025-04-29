@@ -230,7 +230,7 @@ export class CommandParser {
       };
     }
 
-    const branchName = args[0];
+    const branchName = args[0].replace(/"/g, '');
     if (state.branches.some(b => b.name === branchName)) {
       return {
         success: false,
@@ -292,7 +292,7 @@ export class CommandParser {
       };
     }
 
-    const branchName = args[1];
+    const branchName = args[1].replace(/"/g, '');
     if (state.branches.some(b => b.name === branchName)) {
       return {
         success: false,
